@@ -25,7 +25,6 @@ namespace NzbDrone.Test.Common
 
                 Enum.TryParse<TestLogOutput>(Environment.GetEnvironmentVariable("RADARR_TESTS_LOG_OUTPUT"), out var logOutput);
 
-                RegisterSentryLogger();
 
                 switch (logOutput)
                 {
@@ -69,12 +68,6 @@ namespace NzbDrone.Test.Common
             LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, fileTarget));
         }
 
-        private static void RegisterSentryLogger()
-        {
-            // Register a null target for sentry logs, so they aren't caught by other loggers.
-            var loggingRuleSentry = new LoggingRule("Sentry", LogLevel.Debug, new NullTarget()) { Final = true };
-            LogManager.Configuration.LoggingRules.Insert(0, loggingRuleSentry);
-        }
 
         private static void RegisterExceptionVerification()
         {

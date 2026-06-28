@@ -232,7 +232,7 @@ namespace NzbDrone.Core.Download
                            .Property("DownloadId", trackedDownload.DownloadItem.DownloadId)
                            .Property("Title", trackedDownload.DownloadItem.Title)
                            .Property("Path", trackedDownload.ImportItem.OutputPath.ToString())
-                           .WriteSentryWarn("DownloadHistoryIncomplete")
+                           .Warn("DownloadHistoryIncomplete")
                            .Log();
                 }
 

@@ -154,7 +154,7 @@ namespace NzbDrone.Core.MediaFiles.MediaInfo
 
             Logger.ForDebugEvent()
                   .Message("Unknown audio format: '{0}' in '{1}'. Streams: {2}", audioFormat, sceneName, mediaInfo.RawStreamData)
-                  .WriteSentryWarn("UnknownAudioFormatFFProbe", mediaInfo.ContainerFormat, mediaInfo.AudioFormat, audioCodecID)
+                  .Warn("UnknownAudioFormatFFProbe")
                   .Log();
 
             return mediaInfo.AudioFormat;
@@ -269,7 +269,7 @@ namespace NzbDrone.Core.MediaFiles.MediaInfo
 
             Logger.ForDebugEvent()
                   .Message("Unknown video format: '{0}' in '{1}'. Streams: {2}", videoFormat, sceneName, mediaInfo.RawStreamData)
-                  .WriteSentryWarn("UnknownVideoFormatFFProbe", mediaInfo.ContainerFormat, videoFormat, videoCodecID)
+                  .Warn("UnknownVideoFormatFFProbe")
                   .Log();
 
             return result;

@@ -1,3 +1,24 @@
+> **Fork notice — Sentry stripped**
+>
+> This is a fork of [Radarr/Radarr](https://github.com/Radarr/Radarr) at
+> `develop` (`c3849dbc…`) with the Sentry SDK and `@sentry/browser` /
+> `@sentry/integrations` integration removed end-to-end:
+>
+> - Backend: `NzbDrone.Common/Instrumentation/Sentry/*`, `SentryLoggerExtensions`,
+>   `InitializeLogger`, `ReconfigureSentry`, the `Sentry` NuGet (4.0.2),
+>   the `Sentry*` MSBuild props, `FilterSentryEvents` plumbing, and all
+>   `WriteSentryWarn` callsites. Source license (GPL-3.0-or-later) and
+>   Copyright 2010-2025 are preserved.
+> - Frontend: `createSentryMiddleware`, `ErrorBoundary` Sentry capture, the
+>   `@sentry/browser` + `@sentry/integrations` deps.
+>
+> Behavior of remaining telemetry endpoints (`radarr.servarr.com/v1/update`,
+> `radarr.servarr.com/v1/notification`, `api.themoviedb.org`) is **unchanged**
+> and can be firewalled at `/etc/hosts` if desired.
+>
+> Synced to upstream `develop`; the `develop` branch is force-pushed whenever
+> this fork is re-stripped, so diverges from upstream immediately.
+
 # Radarr
 
 [![Build Status](https://dev.azure.com/Radarr/Radarr/_apis/build/status/Radarr.Radarr?branchName=develop)](https://dev.azure.com/Radarr/Radarr/_build/latest?definitionId=1&branchName=develop)
