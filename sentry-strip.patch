@@ -1,54 +1,3 @@
-From c2f6a937cff0c4e7f5795b18f1d652d0133896fd Mon Sep 17 00:00:00 2001
-From: painframe <painframe@users.noreply.github.com>
-Date: Sun, 28 Jun 2026 15:20:45 +0000
-Subject: [PATCH] chore: strip Sentry SDK and frontend integration
-
-- Remove NzbDrone.Common/Instrumentation/Sentry/* (SentryTarget, SentryDebounce, SentryCleanser)
-- Remove SentryLoggerExtensions, InitializeLogger, ReconfigureSentry
-- Remove SentryTargetFixture (referenced removed types)
-- Drop Sentry 4.0.2 NuGet from Radarr.Common.csproj
-- Drop Sentry* MSBuild props from Directory.Build.props (keep PublishRepositoryUrl + EmbedAllSources for SourceLink)
-- Drop FilterSentryEvents from LogOptions + IConfigFileProvider + ConfigFileProvider
-- Neutralize WriteSentryWarn callsites in CompletedDownloadService + MediaInfoFormatter
-- Drop @sentry/browser + @sentry/integrations from package.json
-- Drop createSentryMiddleware.js + Sentry wiring from middlewares.js
-- Drop @sentry/browser import + sentry.captureException from ErrorBoundary.tsx
-- Add fork notice to README
-
-Stripped at upstream develop c3849dbcb02f6e38cb6206e672ca6e2313962b8c.
-GPL-3.0-or-later preserved.
----
- README.md                                     |  21 +
- .../src/Components/Error/ErrorBoundary.tsx    |   2 -
- .../Middleware/createSentryMiddleware.js      | 125 ------
- frontend/src/Store/Middleware/middlewares.js  |   6 -
- package.json                                  |   2 -
- src/Directory.Build.props                     |  20 +-
- .../SentryTargetFixture.cs                    | 117 -----
- .../Extensions/SentryLoggerExtensions.cs      |  54 ---
- .../Instrumentation/InitializeLogger.cs       |  26 --
- .../Instrumentation/NzbDroneLogger.cs         |  32 +-
- .../Instrumentation/Sentry/SentryCleanser.cs  |  96 ----
- .../Instrumentation/Sentry/SentryDebounce.cs  |  38 --
- .../Instrumentation/Sentry/SentryTarget.cs    | 412 ------------------
- src/NzbDrone.Common/Options/LogOptions.cs     |   1 -
- src/NzbDrone.Common/Radarr.Common.csproj      |   1 -
- .../Configuration/ConfigFileProvider.cs       |   2 -
- .../Download/CompletedDownloadService.cs      |   2 +-
- .../Instrumentation/ReconfigureLogging.cs     |  12 -
- .../Instrumentation/ReconfigureSentry.cs      |  42 --
- .../MediaInfo/MediaInfoFormatter.cs           |   4 +-
- src/NzbDrone.Test.Common/LoggingTest.cs       |   7 -
- 21 files changed, 28 insertions(+), 994 deletions(-)
- delete mode 100644 frontend/src/Store/Middleware/createSentryMiddleware.js
- delete mode 100644 src/NzbDrone.Common.Test/InstrumentationTests/SentryTargetFixture.cs
- delete mode 100644 src/NzbDrone.Common/Instrumentation/Extensions/SentryLoggerExtensions.cs
- delete mode 100644 src/NzbDrone.Common/Instrumentation/InitializeLogger.cs
- delete mode 100644 src/NzbDrone.Common/Instrumentation/Sentry/SentryCleanser.cs
- delete mode 100644 src/NzbDrone.Common/Instrumentation/Sentry/SentryDebounce.cs
- delete mode 100644 src/NzbDrone.Common/Instrumentation/Sentry/SentryTarget.cs
- delete mode 100644 src/NzbDrone.Core/Instrumentation/ReconfigureSentry.cs
-
 diff --git a/README.md b/README.md
 index 1131ce4e5..ac66735d0 100644
 --- a/README.md
@@ -259,6 +208,1334 @@ index fe739d08b..0a45b1a7c 100644
      "@tanstack/react-query": "5.74.3",
      "@types/node": "20.16.11",
      "@types/react": "18.3.21",
+diff --git a/sentry-strip.patch b/sentry-strip.patch
+new file mode 100644
+index 000000000..526d9fb9d
+--- /dev/null
++++ b/sentry-strip.patch
+@@ -0,0 +1,1322 @@
++From c2f6a937cff0c4e7f5795b18f1d652d0133896fd Mon Sep 17 00:00:00 2001
++From: painframe <painframe@users.noreply.github.com>
++Date: Sun, 28 Jun 2026 15:20:45 +0000
++Subject: [PATCH] chore: strip Sentry SDK and frontend integration
++
++- Remove NzbDrone.Common/Instrumentation/Sentry/* (SentryTarget, SentryDebounce, SentryCleanser)
++- Remove SentryLoggerExtensions, InitializeLogger, ReconfigureSentry
++- Remove SentryTargetFixture (referenced removed types)
++- Drop Sentry 4.0.2 NuGet from Radarr.Common.csproj
++- Drop Sentry* MSBuild props from Directory.Build.props (keep PublishRepositoryUrl + EmbedAllSources for SourceLink)
++- Drop FilterSentryEvents from LogOptions + IConfigFileProvider + ConfigFileProvider
++- Neutralize WriteSentryWarn callsites in CompletedDownloadService + MediaInfoFormatter
++- Drop @sentry/browser + @sentry/integrations from package.json
++- Drop createSentryMiddleware.js + Sentry wiring from middlewares.js
++- Drop @sentry/browser import + sentry.captureException from ErrorBoundary.tsx
++- Add fork notice to README
++
++Stripped at upstream develop c3849dbcb02f6e38cb6206e672ca6e2313962b8c.
++GPL-3.0-or-later preserved.
++---
++ README.md                                     |  21 +
++ .../src/Components/Error/ErrorBoundary.tsx    |   2 -
++ .../Middleware/createSentryMiddleware.js      | 125 ------
++ frontend/src/Store/Middleware/middlewares.js  |   6 -
++ package.json                                  |   2 -
++ src/Directory.Build.props                     |  20 +-
++ .../SentryTargetFixture.cs                    | 117 -----
++ .../Extensions/SentryLoggerExtensions.cs      |  54 ---
++ .../Instrumentation/InitializeLogger.cs       |  26 --
++ .../Instrumentation/NzbDroneLogger.cs         |  32 +-
++ .../Instrumentation/Sentry/SentryCleanser.cs  |  96 ----
++ .../Instrumentation/Sentry/SentryDebounce.cs  |  38 --
++ .../Instrumentation/Sentry/SentryTarget.cs    | 412 ------------------
++ src/NzbDrone.Common/Options/LogOptions.cs     |   1 -
++ src/NzbDrone.Common/Radarr.Common.csproj      |   1 -
++ .../Configuration/ConfigFileProvider.cs       |   2 -
++ .../Download/CompletedDownloadService.cs      |   2 +-
++ .../Instrumentation/ReconfigureLogging.cs     |  12 -
++ .../Instrumentation/ReconfigureSentry.cs      |  42 --
++ .../MediaInfo/MediaInfoFormatter.cs           |   4 +-
++ src/NzbDrone.Test.Common/LoggingTest.cs       |   7 -
++ 21 files changed, 28 insertions(+), 994 deletions(-)
++ delete mode 100644 frontend/src/Store/Middleware/createSentryMiddleware.js
++ delete mode 100644 src/NzbDrone.Common.Test/InstrumentationTests/SentryTargetFixture.cs
++ delete mode 100644 src/NzbDrone.Common/Instrumentation/Extensions/SentryLoggerExtensions.cs
++ delete mode 100644 src/NzbDrone.Common/Instrumentation/InitializeLogger.cs
++ delete mode 100644 src/NzbDrone.Common/Instrumentation/Sentry/SentryCleanser.cs
++ delete mode 100644 src/NzbDrone.Common/Instrumentation/Sentry/SentryDebounce.cs
++ delete mode 100644 src/NzbDrone.Common/Instrumentation/Sentry/SentryTarget.cs
++ delete mode 100644 src/NzbDrone.Core/Instrumentation/ReconfigureSentry.cs
++
++diff --git a/README.md b/README.md
++index 1131ce4e5..ac66735d0 100644
++--- a/README.md
+++++ b/README.md
++@@ -1,3 +1,24 @@
+++> **Fork notice — Sentry stripped**
+++>
+++> This is a fork of [Radarr/Radarr](https://github.com/Radarr/Radarr) at
+++> `develop` (`c3849dbc…`) with the Sentry SDK and `@sentry/browser` /
+++> `@sentry/integrations` integration removed end-to-end:
+++>
+++> - Backend: `NzbDrone.Common/Instrumentation/Sentry/*`, `SentryLoggerExtensions`,
+++>   `InitializeLogger`, `ReconfigureSentry`, the `Sentry` NuGet (4.0.2),
+++>   the `Sentry*` MSBuild props, `FilterSentryEvents` plumbing, and all
+++>   `WriteSentryWarn` callsites. Source license (GPL-3.0-or-later) and
+++>   Copyright 2010-2025 are preserved.
+++> - Frontend: `createSentryMiddleware`, `ErrorBoundary` Sentry capture, the
+++>   `@sentry/browser` + `@sentry/integrations` deps.
+++>
+++> Behavior of remaining telemetry endpoints (`radarr.servarr.com/v1/update`,
+++> `radarr.servarr.com/v1/notification`, `api.themoviedb.org`) is **unchanged**
+++> and can be firewalled at `/etc/hosts` if desired.
+++>
+++> Synced to upstream `develop`; the `develop` branch is force-pushed whenever
+++> this fork is re-stripped, so diverges from upstream immediately.
+++
++ # Radarr
++ 
++ [![Build Status](https://dev.azure.com/Radarr/Radarr/_apis/build/status/Radarr.Radarr?branchName=develop)](https://dev.azure.com/Radarr/Radarr/_build/latest?definitionId=1&branchName=develop)
++diff --git a/frontend/src/Components/Error/ErrorBoundary.tsx b/frontend/src/Components/Error/ErrorBoundary.tsx
++index 3dd9ebff2..58c6bf0fb 100644
++--- a/frontend/src/Components/Error/ErrorBoundary.tsx
+++++ b/frontend/src/Components/Error/ErrorBoundary.tsx
++@@ -1,4 +1,3 @@
++-import * as sentry from '@sentry/browser';
++ import React, { Component, ErrorInfo } from 'react';
++ 
++ interface ErrorBoundaryProps {
++@@ -29,7 +28,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
++       info,
++     });
++ 
++-    sentry.captureException(error);
++   }
++ 
++   render() {
++diff --git a/frontend/src/Store/Middleware/createSentryMiddleware.js b/frontend/src/Store/Middleware/createSentryMiddleware.js
++deleted file mode 100644
++index e3c8e9876..000000000
++--- a/frontend/src/Store/Middleware/createSentryMiddleware.js
+++++ /dev/null
++@@ -1,125 +0,0 @@
++-import * as sentry from '@sentry/browser';
++-import * as Integrations from '@sentry/integrations';
++-import _ from 'lodash';
++-import parseUrl from 'Utilities/String/parseUrl';
++-
++-const IgnoreErrors = [
++-  // Innocuous browser errors
++-  /ResizeObserver loop limit exceeded/,
++-  /ResizeObserver loop completed with undelivered notifications/
++-];
++-
++-function cleanseUrl(url) {
++-  const properties = parseUrl(url);
++-
++-  return `${properties.pathname}${properties.search}`;
++-}
++-
++-function shouldIgnoreException(s) {
++-  return s && IgnoreErrors.find((pattern) => pattern.test(s));
++-}
++-
++-function cleanseData(event, hint) {
++-  const result = _.cloneDeep(event);
++-
++-  const error = hint && hint.originalException;
++-
++-  result.transaction = cleanseUrl(result.transaction);
++-
++-  if (result.exception) {
++-    result.exception.values.forEach((exception) => {
++-      const stacktrace = exception.stacktrace;
++-
++-      if (stacktrace) {
++-        stacktrace.frames.forEach((frame) => {
++-          frame.filename = cleanseUrl(frame.filename);
++-        });
++-      }
++-    });
++-  }
++-
++-  if (
++-    error &&
++-    error.message &&
++-    shouldIgnoreException(error.message)
++-  ) {
++-    return null;
++-  }
++-
++-  result.request.url = cleanseUrl(result.request.url);
++-
++-  return result;
++-}
++-
++-function identity(stuff) {
++-  return stuff;
++-}
++-
++-function stripUrlBase(frame) {
++-  if (frame.filename && window.Radarr.urlBase) {
++-    frame.filename = frame.filename.replace(window.Radarr.urlBase, '');
++-  }
++-  return frame;
++-}
++-
++-function createMiddleware() {
++-  return (store) => (next) => (action) => {
++-    try {
++-      // Adds a breadcrumb for reporting later (if necessary).
++-      sentry.addBreadcrumb({
++-        category: 'redux',
++-        message: action.type
++-      });
++-
++-      return next(action);
++-    } catch (err) {
++-      console.error(`[sentry] Reporting error to Sentry: ${err}`);
++-
++-      // Send the report including breadcrumbs.
++-      sentry.captureException(err, {
++-        extra: {
++-          action: identity(action),
++-          state: identity(store.getState())
++-        }
++-      });
++-    }
++-  };
++-}
++-
++-export default function createSentryMiddleware() {
++-  const {
++-    analytics,
++-    branch,
++-    version,
++-    release,
++-    userHash,
++-    isProduction
++-  } = window.Radarr;
++-
++-  if (!analytics) {
++-    return;
++-  }
++-
++-  const dsn = isProduction ? 'https://7794f2858478485ea337fb5535624fbd@sentry.servarr.com/12' :
++-    'https://da610619280249f891ec3ee306906793@sentry.servarr.com/13';
++-
++-  sentry.init({
++-    dsn,
++-    environment: branch,
++-    release,
++-    sendDefaultPii: true,
++-    beforeSend: cleanseData,
++-    integrations: [
++-      new Integrations.RewriteFrames({ iteratee: stripUrlBase }),
++-      new Integrations.Dedupe()
++-    ]
++-  });
++-
++-  sentry.configureScope((scope) => {
++-    scope.setUser({ username: userHash });
++-    scope.setTag('version', version);
++-    scope.setTag('production', isProduction);
++-  });
++-
++-  return createMiddleware();
++-}
++diff --git a/frontend/src/Store/Middleware/middlewares.js b/frontend/src/Store/Middleware/middlewares.js
++index c4e4ce26f..32e2c3e13 100644
++--- a/frontend/src/Store/Middleware/middlewares.js
+++++ b/frontend/src/Store/Middleware/middlewares.js
++@@ -2,15 +2,9 @@ import { routerMiddleware } from 'connected-react-router';
++ import { applyMiddleware, compose } from 'redux';
++ import thunk from 'redux-thunk';
++ import createPersistState from './createPersistState';
++-import createSentryMiddleware from './createSentryMiddleware';
++ 
++ export default function(history) {
++   const middlewares = [];
++-  const sentryMiddleware = createSentryMiddleware();
++-
++-  if (sentryMiddleware) {
++-    middlewares.push(sentryMiddleware);
++-  }
++ 
++   middlewares.push(routerMiddleware(history));
++   middlewares.push(thunk);
++diff --git a/package.json b/package.json
++index fe739d08b..0a45b1a7c 100644
++--- a/package.json
+++++ b/package.json
++@@ -30,8 +30,6 @@
++     "@fortawesome/react-fontawesome": "0.2.2",
++     "@juggle/resize-observer": "3.4.0",
++     "@microsoft/signalr": "8.0.17",
++-    "@sentry/browser": "7.119.1",
++-    "@sentry/integrations": "7.119.1",
++     "@tanstack/react-query": "5.74.3",
++     "@types/node": "20.16.11",
++     "@types/react": "18.3.21",
++diff --git a/src/Directory.Build.props b/src/Directory.Build.props
++index be4822d45..d42fc7986 100644
++--- a/src/Directory.Build.props
+++++ b/src/Directory.Build.props
++@@ -99,25 +99,11 @@
++     <RootNamespace Condition="'$(RadarrProject)'=='true'">$(MSBuildProjectName.Replace('Radarr','NzbDrone'))</RootNamespace>
++   </PropertyGroup>
++ 
++-  <!-- Sentry specific configuration: Only in Release mode -->
+++  <!-- Source Link settings -->
+++  <!-- https://github.com/dotnet/sourcelink/blob/main/docs/README.md#publishrepositoryurl -->
++   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
++-    <!-- https://docs.sentry.io/platforms/dotnet/configuration/msbuild/ -->
++-    <!-- OrgSlug, ProjectSlug and AuthToken are required. 
++-    They can be set below, via argument to 'msbuild -p:' or environment variable -->
++-    <SentryOrg></SentryOrg>
++-    <SentryProject></SentryProject>
++-    <SentryUrl></SentryUrl> <!--  If empty, assumed to be sentry.io -->
++-    <SentryAuthToken></SentryAuthToken> <!-- Use env var instead: SENTRY_AUTH_TOKEN -->
++-
++-    <!-- Upload PDBs to Sentry, enabling stack traces with line numbers and file paths
++-      without the need to deploy the application with PDBs -->
++-    <SentryUploadSymbols>true</SentryUploadSymbols>
++-
++-    <!-- Source Link settings -->
++-    <!-- https://github.com/dotnet/sourcelink/blob/main/docs/README.md#publishrepositoryurl -->
++     <PublishRepositoryUrl>true</PublishRepositoryUrl>
++-    <!--  Embeds all source code in the respective PDB. This can make it a bit bigger but since it'll be uploaded
++-      to Sentry and not distributed to run on the server, it helps debug crashes while making releases smaller -->
+++    <!-- Embeds all source code in the respective PDB. Helps debug crashes via SourceLink. -->
++     <EmbedAllSources>true</EmbedAllSources>
++   </PropertyGroup>
++ 
++diff --git a/src/NzbDrone.Common.Test/InstrumentationTests/SentryTargetFixture.cs b/src/NzbDrone.Common.Test/InstrumentationTests/SentryTargetFixture.cs
++deleted file mode 100644
++index 772efa6e3..000000000
++--- a/src/NzbDrone.Common.Test/InstrumentationTests/SentryTargetFixture.cs
+++++ /dev/null
++@@ -1,117 +0,0 @@
++-using System;
++-using System.Globalization;
++-using System.Linq;
++-using FluentAssertions;
++-using NLog;
++-using NUnit.Framework;
++-using NzbDrone.Common.EnvironmentInfo;
++-using NzbDrone.Common.Instrumentation.Sentry;
++-using NzbDrone.Test.Common;
++-
++-namespace NzbDrone.Common.Test.InstrumentationTests
++-{
++-    [TestFixture]
++-    public class SentryTargetFixture : TestBase
++-    {
++-        private SentryTarget _subject;
++-
++-        private static LogLevel[] AllLevels = LogLevel.AllLevels.ToArray();
++-        private static LogLevel[] SentryLevels = LogLevel.AllLevels.Where(x => x >= LogLevel.Error).ToArray();
++-        private static LogLevel[] OtherLevels = AllLevels.Except(SentryLevels).ToArray();
++-
++-        // TODO: SQLiteException filtering tests don't work on linux-86 and alpine customer Azure agents due to sqlite library not being loaded up, pass local
++-        private static Exception[] FilteredExceptions = new Exception[]
++-        {
++-            // new SQLiteException(SQLiteErrorCode.Locked, "database is locked"),
++-            new UnauthorizedAccessException(),
++-            new AggregateException(new Exception[]
++-            {
++-                new UnauthorizedAccessException(),
++-                new UnauthorizedAccessException()
++-            })
++-        };
++-
++-        private static Exception[] NonFilteredExceptions = new Exception[]
++-        {
++-            // new SQLiteException(SQLiteErrorCode.Error, "it's borked"),
++-            new AggregateException(new Exception[]
++-            {
++-                new UnauthorizedAccessException(),
++-                new NotImplementedException()
++-            })
++-        };
++-
++-        [SetUp]
++-        public void Setup()
++-        {
++-            _subject = new SentryTarget("https://aaaaaaaaaaaaaaaaaaaaaaaaaa@sentry.io/111111", Mocker.GetMock<IAppFolderInfo>().Object);
++-        }
++-
++-        private LogEventInfo GivenLogEvent(LogLevel level, Exception ex, string message)
++-        {
++-            return LogEventInfo.Create(level, "SentryTest", ex, CultureInfo.InvariantCulture, message);
++-        }
++-
++-        [Test]
++-        [TestCaseSource("AllLevels")]
++-        public void log_without_error_is_not_sentry_event(LogLevel level)
++-        {
++-            _subject.IsSentryMessage(GivenLogEvent(level, null, "test")).Should().BeFalse();
++-        }
++-
++-        [Test]
++-        [TestCaseSource("SentryLevels")]
++-        public void error_or_worse_with_exception_is_sentry_event(LogLevel level)
++-        {
++-            _subject.IsSentryMessage(GivenLogEvent(level, new Exception(), "test")).Should().BeTrue();
++-        }
++-
++-        [Test]
++-        [TestCaseSource("OtherLevels")]
++-        public void less_than_error_with_exception_is_not_sentry_event(LogLevel level)
++-        {
++-            _subject.IsSentryMessage(GivenLogEvent(level, new Exception(), "test")).Should().BeFalse();
++-        }
++-
++-        [Test]
++-        [TestCaseSource("FilteredExceptions")]
++-        public void should_filter_event_for_filtered_exception_types(Exception ex)
++-        {
++-            var log = GivenLogEvent(LogLevel.Error, ex, "test");
++-            _subject.IsSentryMessage(log).Should().BeFalse();
++-        }
++-
++-        [Test]
++-        [TestCaseSource("NonFilteredExceptions")]
++-        public void should_not_filter_event_for_filtered_exception_types(Exception ex)
++-        {
++-            var log = GivenLogEvent(LogLevel.Error, ex, "test");
++-            _subject.IsSentryMessage(log).Should().BeTrue();
++-        }
++-
++-        [Test]
++-        [TestCaseSource("FilteredExceptions")]
++-        public void should_not_filter_event_for_filtered_exception_types_if_filtering_disabled(Exception ex)
++-        {
++-            _subject.FilterEvents = false;
++-            var log = GivenLogEvent(LogLevel.Error, ex, "test");
++-            _subject.IsSentryMessage(log).Should().BeTrue();
++-        }
++-
++-        [Test]
++-        [TestCaseSource(typeof(SentryTarget), "FilteredExceptionMessages")]
++-        public void should_filter_event_for_filtered_exception_messages(string message)
++-        {
++-            var log = GivenLogEvent(LogLevel.Error, new Exception("aaaaaaa" + message + "bbbbbbb"), "test");
++-            _subject.IsSentryMessage(log).Should().BeFalse();
++-        }
++-
++-        [TestCase("A message that isn't filtered")]
++-        [TestCase("Error")]
++-        public void should_not_filter_event_for_exception_messages_that_are_not_filtered(string message)
++-        {
++-            var log = GivenLogEvent(LogLevel.Error, new Exception(message), "test");
++-            _subject.IsSentryMessage(log).Should().BeTrue();
++-        }
++-    }
++-}
++diff --git a/src/NzbDrone.Common/Instrumentation/Extensions/SentryLoggerExtensions.cs b/src/NzbDrone.Common/Instrumentation/Extensions/SentryLoggerExtensions.cs
++deleted file mode 100644
++index 68201d62c..000000000
++--- a/src/NzbDrone.Common/Instrumentation/Extensions/SentryLoggerExtensions.cs
+++++ /dev/null
++@@ -1,54 +0,0 @@
++-using System.Collections.Generic;
++-using System.Linq;
++-using NLog;
++-
++-namespace NzbDrone.Common.Instrumentation.Extensions
++-{
++-    public static class SentryLoggerExtensions
++-    {
++-        public static readonly Logger SentryLogger = LogManager.GetLogger("Sentry");
++-
++-        public static LogEventBuilder SentryFingerprint(this LogEventBuilder logBuilder, params string[] fingerprint)
++-        {
++-            return logBuilder.Property("Sentry", fingerprint);
++-        }
++-
++-        public static LogEventBuilder WriteSentryDebug(this LogEventBuilder logBuilder, params string[] fingerprint)
++-        {
++-            return LogSentryMessage(logBuilder, LogLevel.Debug, fingerprint);
++-        }
++-
++-        public static LogEventBuilder WriteSentryInfo(this LogEventBuilder logBuilder, params string[] fingerprint)
++-        {
++-            return LogSentryMessage(logBuilder, LogLevel.Info, fingerprint);
++-        }
++-
++-        public static LogEventBuilder WriteSentryWarn(this LogEventBuilder logBuilder, params string[] fingerprint)
++-        {
++-            return LogSentryMessage(logBuilder, LogLevel.Warn, fingerprint);
++-        }
++-
++-        public static LogEventBuilder WriteSentryError(this LogEventBuilder logBuilder, params string[] fingerprint)
++-        {
++-            return LogSentryMessage(logBuilder, LogLevel.Error, fingerprint);
++-        }
++-
++-        private static LogEventBuilder LogSentryMessage(LogEventBuilder logBuilder, LogLevel level, string[] fingerprint)
++-        {
++-            SentryLogger.ForLogEvent(level)
++-                        .CopyLogEvent(logBuilder.LogEvent)
++-                        .SentryFingerprint(fingerprint)
++-                        .Log();
++-
++-            return logBuilder.Property<string>("Sentry", null);
++-        }
++-
++-        private static LogEventBuilder CopyLogEvent(this LogEventBuilder logBuilder, LogEventInfo logEvent)
++-        {
++-            return logBuilder.TimeStamp(logEvent.TimeStamp)
++-                             .Message(logEvent.Message, logEvent.Parameters)
++-                             .Properties(logEvent.Properties.Select(p => new KeyValuePair<string, object>(p.Key.ToString(), p.Value)))
++-                             .Exception(logEvent.Exception);
++-        }
++-    }
++-}
++diff --git a/src/NzbDrone.Common/Instrumentation/InitializeLogger.cs b/src/NzbDrone.Common/Instrumentation/InitializeLogger.cs
++deleted file mode 100644
++index 038be8da8..000000000
++--- a/src/NzbDrone.Common/Instrumentation/InitializeLogger.cs
+++++ /dev/null
++@@ -1,26 +0,0 @@
++-﻿using System.Linq;
++-using NLog;
++-using NzbDrone.Common.EnvironmentInfo;
++-using NzbDrone.Common.Instrumentation.Sentry;
++-
++-namespace NzbDrone.Common.Instrumentation
++-{
++-    public class InitializeLogger
++-    {
++-        private readonly IOsInfo _osInfo;
++-
++-        public InitializeLogger(IOsInfo osInfo)
++-        {
++-            _osInfo = osInfo;
++-        }
++-
++-        public void Initialize()
++-        {
++-            var sentryTarget = LogManager.Configuration.AllTargets.OfType<SentryTarget>().FirstOrDefault();
++-            if (sentryTarget != null)
++-            {
++-                sentryTarget.UpdateScope(_osInfo);
++-            }
++-        }
++-    }
++-}
++diff --git a/src/NzbDrone.Common/Instrumentation/NzbDroneLogger.cs b/src/NzbDrone.Common/Instrumentation/NzbDroneLogger.cs
++index 663f76ce3..64b3c7b32 100644
++--- a/src/NzbDrone.Common/Instrumentation/NzbDroneLogger.cs
+++++ b/src/NzbDrone.Common/Instrumentation/NzbDroneLogger.cs
++@@ -6,7 +6,6 @@
++ using NLog.Targets;
++ using NzbDrone.Common.EnvironmentInfo;
++ using NzbDrone.Common.Extensions;
++-using NzbDrone.Common.Instrumentation.Sentry;
++ 
++ namespace NzbDrone.Common.Instrumentation
++ {
++@@ -45,7 +44,7 @@ public static void Register(IStartupContext startupContext, bool updateApp, bool
++                 RegisterDebugger();
++             }
++ 
++-            RegisterSentry(updateApp, appFolderInfo);
+++
++ 
++             if (updateApp)
++             {
++@@ -66,35 +65,6 @@ public static void Register(IStartupContext startupContext, bool updateApp, bool
++             LogManager.ReconfigExistingLoggers();
++         }
++ 
++-        private static void RegisterSentry(bool updateClient, IAppFolderInfo appFolderInfo)
++-        {
++-            string dsn;
++-
++-            if (updateClient)
++-            {
++-                dsn = "https://fdefcf5a6a4a4a0db914b5712b5480e0@sentry.servarr.com/11";
++-            }
++-            else
++-            {
++-                dsn = RuntimeInfo.IsProduction
++-                    ? "https://40f1288c1b4d495cbafdb5c89f7f01be@sentry.servarr.com/9"
++-                    : "https://998b4673d4c849ccb5277b5966ed5bc2@sentry.servarr.com/10";
++-            }
++-
++-            var target = new SentryTarget(dsn, appFolderInfo)
++-            {
++-                Name = "sentryTarget",
++-                Layout = "${message}"
++-            };
++-
++-            var loggingRule = new LoggingRule("*", updateClient ? LogLevel.Trace : LogLevel.Debug, target);
++-            LogManager.Configuration.AddTarget("sentryTarget", target);
++-            LogManager.Configuration.LoggingRules.Add(loggingRule);
++-
++-            // Events logged to Sentry go only to Sentry.
++-            var loggingRuleSentry = new LoggingRule("Sentry", LogLevel.Debug, target) { Final = true };
++-            LogManager.Configuration.LoggingRules.Insert(0, loggingRuleSentry);
++-        }
++ 
++         private static void RegisterDebugger()
++         {
++diff --git a/src/NzbDrone.Common/Instrumentation/Sentry/SentryCleanser.cs b/src/NzbDrone.Common/Instrumentation/Sentry/SentryCleanser.cs
++deleted file mode 100644
++index 85175b426..000000000
++--- a/src/NzbDrone.Common/Instrumentation/Sentry/SentryCleanser.cs
+++++ /dev/null
++@@ -1,96 +0,0 @@
++-using System;
++-using System.Linq;
++-using Sentry;
++-
++-namespace NzbDrone.Common.Instrumentation.Sentry
++-{
++-    public static class SentryCleanser
++-    {
++-        public static SentryEvent CleanseEvent(SentryEvent sentryEvent)
++-        {
++-            try
++-            {
++-                if (sentryEvent.Message is not null)
++-                {
++-                    sentryEvent.Message.Formatted = CleanseLogMessage.Cleanse(sentryEvent.Message.Formatted);
++-                    sentryEvent.Message.Message = CleanseLogMessage.Cleanse(sentryEvent.Message.Message);
++-                    sentryEvent.Message.Params = sentryEvent.Message.Params?.Select(x => CleanseLogMessage.Cleanse(x switch
++-                    {
++-                        string str => str,
++-                        _ => x.ToString()
++-                    })).ToList();
++-                }
++-
++-                if (sentryEvent.Fingerprint.Any())
++-                {
++-                    var fingerprint = sentryEvent.Fingerprint.Select(x => CleanseLogMessage.Cleanse(x)).ToList();
++-                    sentryEvent.SetFingerprint(fingerprint);
++-                }
++-
++-                if (sentryEvent.Extra.Any())
++-                {
++-                    var extras = sentryEvent.Extra.ToDictionary(x => x.Key, y => (object)CleanseLogMessage.Cleanse(y.Value as string));
++-                    sentryEvent.SetExtras(extras);
++-                }
++-
++-                if (sentryEvent.SentryExceptions is not null)
++-                {
++-                    foreach (var exception in sentryEvent.SentryExceptions)
++-                    {
++-                        exception.Value = CleanseLogMessage.Cleanse(exception.Value);
++-                        if (exception.Stacktrace is not null)
++-                        {
++-                            foreach (var frame in exception.Stacktrace.Frames)
++-                            {
++-                                frame.FileName = ShortenPath(frame.FileName);
++-                            }
++-                        }
++-                    }
++-                }
++-            }
++-            catch (Exception)
++-            {
++-            }
++-
++-            return sentryEvent;
++-        }
++-
++-        public static Breadcrumb CleanseBreadcrumb(Breadcrumb b)
++-        {
++-            try
++-            {
++-                var message = CleanseLogMessage.Cleanse(b.Message);
++-                var data = b.Data?.ToDictionary(x => x.Key, y => CleanseLogMessage.Cleanse(y.Value));
++-                return new Breadcrumb(message, b.Type, data, b.Category, b.Level);
++-            }
++-            catch (Exception)
++-            {
++-            }
++-
++-            return b;
++-        }
++-
++-        private static string ShortenPath(string path)
++-        {
++-            if (string.IsNullOrWhiteSpace(path))
++-            {
++-                return null;
++-            }
++-
++-            // the paths in the stacktrace depend on where it was compiled,
++-            // not the current OS
++-            var rootDirs = new[] { "\\src\\", "/src/" };
++-            foreach (var rootDir in rootDirs)
++-            {
++-                var index = path.IndexOf(rootDir, StringComparison.Ordinal);
++-
++-                if (index > 0)
++-                {
++-                    return path.Substring(index + rootDir.Length - 1);
++-                }
++-            }
++-
++-            return path;
++-        }
++-    }
++-}
++diff --git a/src/NzbDrone.Common/Instrumentation/Sentry/SentryDebounce.cs b/src/NzbDrone.Common/Instrumentation/Sentry/SentryDebounce.cs
++deleted file mode 100644
++index 77585e7a7..000000000
++--- a/src/NzbDrone.Common/Instrumentation/Sentry/SentryDebounce.cs
+++++ /dev/null
++@@ -1,38 +0,0 @@
++-﻿using System;
++-using System.Collections.Generic;
++-using NzbDrone.Common.Cache;
++-using NzbDrone.Common.EnvironmentInfo;
++-
++-namespace NzbDrone.Common.Instrumentation.Sentry
++-{
++-    public class SentryDebounce
++-    {
++-        private readonly TimeSpan _ttl;
++-        private readonly Cached<bool> _cache;
++-
++-        public SentryDebounce()
++-        {
++-            _cache = new Cached<bool>();
++-            _ttl = RuntimeInfo.IsProduction ? TimeSpan.FromHours(1) : TimeSpan.FromSeconds(10);
++-        }
++-
++-        public bool Allowed(IEnumerable<string> fingerPrint)
++-        {
++-            var key = string.Join("|", fingerPrint);
++-            var exists = _cache.Find(key);
++-
++-            if (exists)
++-            {
++-                return false;
++-            }
++-
++-            _cache.Set(key, true, _ttl);
++-            return true;
++-        }
++-
++-        public void Clear()
++-        {
++-            _cache.Clear();
++-        }
++-    }
++-}
++diff --git a/src/NzbDrone.Common/Instrumentation/Sentry/SentryTarget.cs b/src/NzbDrone.Common/Instrumentation/Sentry/SentryTarget.cs
++deleted file mode 100644
++index fd2fef61f..000000000
++--- a/src/NzbDrone.Common/Instrumentation/Sentry/SentryTarget.cs
+++++ /dev/null
++@@ -1,412 +0,0 @@
++-using System;
++-using System.Collections;
++-using System.Collections.Generic;
++-using System.Data.SQLite;
++-using System.Linq;
++-using System.Net;
++-using System.Threading;
++-using NLog;
++-using NLog.Common;
++-using NLog.Targets;
++-using Npgsql;
++-using NzbDrone.Common.EnvironmentInfo;
++-using NzbDrone.Common.Extensions;
++-using Sentry;
++-
++-namespace NzbDrone.Common.Instrumentation.Sentry
++-{
++-    [Target("Sentry")]
++-    public class SentryTarget : TargetWithLayout
++-    {
++-        // don't report uninformative SQLite exceptions
++-        // busy/locked are benign https://forums.sonarr.tv/t/owin-sqlite-error-5-database-is-locked/5423/11
++-        // The others will be user configuration problems and silt up Sentry
++-        private static readonly HashSet<SQLiteErrorCode> FilteredSQLiteErrors = new HashSet<SQLiteErrorCode>
++-        {
++-            SQLiteErrorCode.Busy,
++-            SQLiteErrorCode.Locked,
++-            SQLiteErrorCode.Perm,
++-            SQLiteErrorCode.ReadOnly,
++-            SQLiteErrorCode.IoErr,
++-            SQLiteErrorCode.Corrupt,
++-            SQLiteErrorCode.Full,
++-            SQLiteErrorCode.CantOpen,
++-            SQLiteErrorCode.Auth
++-        };
++-
++-        private static readonly HashSet<string> FilteredPostgresErrorCodes = new HashSet<string>
++-        {
++-            PostgresErrorCodes.OutOfMemory,
++-            PostgresErrorCodes.TooManyConnections,
++-            PostgresErrorCodes.DiskFull,
++-            PostgresErrorCodes.ProgramLimitExceeded
++-        };
++-
++-        // use string and not Type so we don't need a reference to the project
++-        // where these are defined
++-        private static readonly HashSet<string> FilteredExceptionTypeNames = new HashSet<string>
++-        {
++-            // UnauthorizedAccessExceptions will just be user configuration issues
++-            "UnauthorizedAccessException",
++-
++-            // Filter out people stuck in boot loops
++-            "CorruptDatabaseException",
++-
++-            // Filter SingleInstance Termination Exceptions
++-            "TerminateApplicationException",
++-
++-            // User config issue, root folder missing, etc.
++-            "DirectoryNotFoundException"
++-        };
++-
++-        public static readonly List<string> FilteredExceptionMessages = new List<string>
++-        {
++-            // Swallow the many, many exceptions flowing through from Jackett
++-            "Jackett.Common.IndexerException",
++-
++-            // Fix openflixr being stupid with permissions
++-            "openflixr"
++-        };
++-
++-        // exception types in this list will additionally have the exception message added to the
++-        // sentry fingerprint.  Make sure that this message doesn't vary by exception
++-        // (e.g. containing a path or a url) so that the sentry grouping is sensible
++-        private static readonly HashSet<string> IncludeExceptionMessageTypes = new HashSet<string>
++-        {
++-            "SQLiteException"
++-        };
++-
++-        private static readonly IDictionary<LogLevel, SentryLevel> LoggingLevelMap = new Dictionary<LogLevel, SentryLevel>
++-        {
++-            { LogLevel.Debug, SentryLevel.Debug },
++-            { LogLevel.Error, SentryLevel.Error },
++-            { LogLevel.Fatal, SentryLevel.Fatal },
++-            { LogLevel.Info, SentryLevel.Info },
++-            { LogLevel.Trace, SentryLevel.Debug },
++-            { LogLevel.Warn, SentryLevel.Warning },
++-        };
++-
++-        private static readonly IDictionary<LogLevel, BreadcrumbLevel> BreadcrumbLevelMap = new Dictionary<LogLevel, BreadcrumbLevel>
++-        {
++-            { LogLevel.Debug, BreadcrumbLevel.Debug },
++-            { LogLevel.Error, BreadcrumbLevel.Error },
++-            { LogLevel.Fatal, BreadcrumbLevel.Critical },
++-            { LogLevel.Info, BreadcrumbLevel.Info },
++-            { LogLevel.Trace, BreadcrumbLevel.Debug },
++-            { LogLevel.Warn, BreadcrumbLevel.Warning },
++-        };
++-
++-        private readonly DateTime _startTime = DateTime.UtcNow;
++-        private readonly IDisposable _sdk;
++-        private readonly SentryDebounce _debounce;
++-
++-        private bool _disposed;
++-        private bool _unauthorized;
++-
++-        public bool FilterEvents { get; set; }
++-        public bool SentryEnabled { get; set; }
++-
++-        public SentryTarget(string dsn, IAppFolderInfo appFolderInfo)
++-        {
++-            _sdk = SentrySdk.Init(o =>
++-                                  {
++-                                      o.Dsn = dsn;
++-                                      o.AttachStacktrace = true;
++-                                      o.MaxBreadcrumbs = 200;
++-                                      o.Release = $"{BuildInfo.AppName}@{BuildInfo.Release}";
++-                                      o.SetBeforeSend(x => SentryCleanser.CleanseEvent(x));
++-                                      o.SetBeforeBreadcrumb(x => SentryCleanser.CleanseBreadcrumb(x));
++-                                      o.Environment = BuildInfo.Branch;
++-
++-                                      // Crash free run statistics (sends a ping for healthy and for crashes sessions)
++-                                      o.AutoSessionTracking = false;
++-
++-                                      // Caches files in the event device is offline
++-                                      // Sentry creates a 'sentry' sub directory, no need to concat here
++-                                      o.CacheDirectoryPath = appFolderInfo.GetAppDataPath();
++-
++-                                      // default environment is production
++-                                      if (!RuntimeInfo.IsProduction)
++-                                      {
++-                                          if (RuntimeInfo.IsDevelopment)
++-                                          {
++-                                              o.Environment = "development";
++-                                          }
++-                                          else if (RuntimeInfo.IsTesting)
++-                                          {
++-                                              o.Environment = "testing";
++-                                          }
++-                                          else
++-                                          {
++-                                              o.Environment = "other";
++-                                          }
++-                                      }
++-                                  });
++-
++-            InitializeScope();
++-
++-            _debounce = new SentryDebounce();
++-
++-            // initialize to true and reconfigure later
++-            // Otherwise it will default to false and any errors occurring
++-            // before config file gets read will not be filtered
++-            FilterEvents = true;
++-            SentryEnabled = true;
++-        }
++-
++-        public void InitializeScope()
++-        {
++-            SentrySdk.ConfigureScope(scope =>
++-            {
++-                scope.User = new SentryUser
++-                {
++-                    Id = HashUtil.AnonymousToken()
++-                };
++-
++-                scope.Contexts.App.Name = BuildInfo.AppName;
++-                scope.Contexts.App.Version = BuildInfo.Version.ToString();
++-                scope.Contexts.App.StartTime = _startTime;
++-                scope.Contexts.App.Hash = HashUtil.AnonymousToken();
++-                scope.Contexts.App.Build = BuildInfo.Release; // Git commit cache?
++-
++-                scope.SetTag("culture", Thread.CurrentThread.CurrentCulture.Name);
++-                scope.SetTag("branch", BuildInfo.Branch);
++-                scope.SetTag("runtime_identifier", System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier);
++-            });
++-        }
++-
++-        public void UpdateScope(IOsInfo osInfo)
++-        {
++-            SentrySdk.ConfigureScope(scope =>
++-            {
++-                scope.SetTag("is_docker", $"{osInfo.IsDocker}");
++-            });
++-        }
++-
++-        public void UpdateScope(Version databaseVersion, int migration, string updateBranch, IPlatformInfo platformInfo)
++-        {
++-            SentrySdk.ConfigureScope(scope =>
++-            {
++-                scope.Environment = updateBranch;
++-                scope.SetTag("runtime_version", $"{PlatformInfo.PlatformName} {platformInfo.Version}");
++-
++-                if (databaseVersion != default(Version))
++-                {
++-                    scope.SetTag("sqlite_version", $"{databaseVersion}");
++-                    scope.SetTag("database_migration", $"{migration}");
++-                }
++-            });
++-        }
++-
++-        private void OnError(Exception ex)
++-        {
++-            var webException = ex as WebException;
++-
++-            if (webException != null)
++-            {
++-                var response = webException.Response as HttpWebResponse;
++-                var statusCode = response?.StatusCode;
++-                if (statusCode == HttpStatusCode.Unauthorized)
++-                {
++-                    _unauthorized = true;
++-                    _debounce.Clear();
++-                }
++-            }
++-
++-            InternalLogger.Error(ex, "Unable to send error to Sentry");
++-        }
++-
++-        private static List<string> GetFingerPrint(LogEventInfo logEvent)
++-        {
++-            if (logEvent.Properties.ContainsKey("Sentry"))
++-            {
++-                return ((string[])logEvent.Properties["Sentry"]).ToList();
++-            }
++-
++-            var fingerPrint = new List<string>
++-            {
++-                logEvent.Level.ToString(),
++-                logEvent.LoggerName,
++-                logEvent.Message
++-            };
++-
++-            var ex = logEvent.Exception;
++-
++-            if (ex != null)
++-            {
++-                fingerPrint.Add(ex.GetType().FullName);
++-                if (ex.TargetSite != null)
++-                {
++-                    fingerPrint.Add(ex.TargetSite.ToString());
++-                }
++-
++-                if (ex.InnerException != null)
++-                {
++-                    fingerPrint.Add(ex.InnerException.GetType().FullName);
++-                }
++-                else if (IncludeExceptionMessageTypes.Contains(ex.GetType().Name))
++-                {
++-                    fingerPrint.Add(ex?.Message);
++-                }
++-            }
++-
++-            return fingerPrint;
++-        }
++-
++-        public bool IsSentryMessage(LogEventInfo logEvent)
++-        {
++-            if (logEvent.Properties.ContainsKey("Sentry"))
++-            {
++-                return logEvent.Properties["Sentry"] != null;
++-            }
++-
++-            if (logEvent.Level >= LogLevel.Error && logEvent.Exception != null)
++-            {
++-                if (FilterEvents)
++-                {
++-                    var exceptions = new List<Exception>();
++-
++-                    var aggEx = logEvent.Exception as AggregateException;
++-
++-                    if (aggEx != null && aggEx.InnerExceptions.Count > 0)
++-                    {
++-                        exceptions.AddRange(aggEx.InnerExceptions);
++-                    }
++-                    else
++-                    {
++-                        exceptions.Add(logEvent.Exception);
++-                    }
++-
++-                    // If any are sentry then send to sentry
++-                    foreach (var ex in exceptions)
++-                    {
++-                        var isSentry = true;
++-
++-                        var sqlEx = ex as SQLiteException;
++-                        if (sqlEx != null && FilteredSQLiteErrors.Contains(sqlEx.ResultCode))
++-                        {
++-                            isSentry = false;
++-                        }
++-
++-                        var pgEx = logEvent.Exception as PostgresException;
++-                        if (pgEx != null && FilteredPostgresErrorCodes.Contains(pgEx.SqlState))
++-                        {
++-                            return false;
++-                        }
++-
++-                        // We don't care about transient network and timeout errors
++-                        var npgEx = logEvent.Exception as NpgsqlException;
++-                        if (npgEx != null && npgEx.IsTransient)
++-                        {
++-                            return false;
++-                        }
++-
++-                        if (FilteredExceptionTypeNames.Contains(ex.GetType().Name))
++-                        {
++-                            isSentry = false;
++-                        }
++-
++-                        if (FilteredExceptionMessages.Any(x => ex.Message.Contains(x)))
++-                        {
++-                            isSentry = false;
++-                        }
++-
++-                        if (isSentry)
++-                        {
++-                            return true;
++-                        }
++-                    }
++-
++-                    // The exception or aggregate exception children were not sentry exceptions
++-                    return false;
++-                }
++-
++-                return true;
++-            }
++-
++-            return false;
++-        }
++-
++-        protected override void Write(LogEventInfo logEvent)
++-        {
++-            if (_unauthorized || !SentryEnabled)
++-            {
++-                return;
++-            }
++-
++-            try
++-            {
++-                SentrySdk.AddBreadcrumb(logEvent.FormattedMessage, logEvent.LoggerName, level: BreadcrumbLevelMap[logEvent.Level]);
++-
++-                // don't report non-critical events without exceptions
++-                if (!IsSentryMessage(logEvent))
++-                {
++-                    return;
++-                }
++-
++-                var fingerPrint = GetFingerPrint(logEvent);
++-                if (!_debounce.Allowed(fingerPrint))
++-                {
++-                    return;
++-                }
++-
++-                var extras = logEvent.Properties.ToDictionary(x => x.Key.ToString(), x => (object)x.Value.ToString());
++-                extras.Remove("Sentry");
++-
++-                if (logEvent.Exception != null)
++-                {
++-                    foreach (DictionaryEntry data in logEvent.Exception.Data)
++-                    {
++-                        extras.Add(data.Key.ToString(), data.Value.ToString());
++-                    }
++-                }
++-
++-                var level = LoggingLevelMap[logEvent.Level];
++-                var sentryEvent = new SentryEvent(logEvent.Exception)
++-                {
++-                    Level = level,
++-                    Logger = logEvent.LoggerName,
++-                    Message = logEvent.FormattedMessage
++-                };
++-
++-                if (level is SentryLevel.Fatal && logEvent.Exception is not null)
++-                {
++-                    // Usages of 'fatal' here indicates the process will crash. In Sentry this is represented with
++-                    // the 'unhandled' exception flag
++-                    logEvent.Exception.SetSentryMechanism("Logger.Fatal", "Logger.Fatal was called", false);
++-                }
++-
++-                sentryEvent.SetExtras(extras);
++-                sentryEvent.SetFingerprint(fingerPrint);
++-
++-                SentrySdk.CaptureEvent(sentryEvent);
++-            }
++-            catch (Exception e)
++-            {
++-                OnError(e);
++-            }
++-        }
++-
++-        // https://stackoverflow.com/questions/2496311/implementing-idisposable-on-a-subclass-when-the-parent-also-implements-idisposab
++-        protected override void Dispose(bool disposing)
++-        {
++-            // Only do something if we're not already disposed
++-            if (_disposed)
++-            {
++-                // If disposing == true, we're being called from a call to base.Dispose().  In this case, we Dispose() our logger
++-                // If we're being called from a finalizer, our logger will get finalized as well, so no need to do anything.
++-                if (disposing)
++-                {
++-                    _sdk?.Dispose();
++-                }
++-
++-                // Flag us as disposed.  This allows us to handle multiple calls to Dispose() as well as ObjectDisposedException
++-                _disposed = true;
++-            }
++-
++-            // This should always be safe to call multiple times!
++-            // We could include it in the check for disposed above, but I left it out to demonstrate that it's safe
++-            base.Dispose(disposing);
++-        }
++-    }
++-}
++diff --git a/src/NzbDrone.Common/Options/LogOptions.cs b/src/NzbDrone.Common/Options/LogOptions.cs
++index 6460eeaa6..545cc69eb 100644
++--- a/src/NzbDrone.Common/Options/LogOptions.cs
+++++ b/src/NzbDrone.Common/Options/LogOptions.cs
++@@ -3,7 +3,6 @@ namespace NzbDrone.Common.Options;
++ public class LogOptions
++ {
++     public string Level { get; set; }
++-    public bool? FilterSentryEvents { get; set; }
++     public int? Rotate { get; set; }
++     public int? SizeLimit { get; set; }
++     public bool? Sql { get; set; }
++diff --git a/src/NzbDrone.Common/Radarr.Common.csproj b/src/NzbDrone.Common/Radarr.Common.csproj
++index ed3dc1a8b..b6932f057 100644
++--- a/src/NzbDrone.Common/Radarr.Common.csproj
+++++ b/src/NzbDrone.Common/Radarr.Common.csproj
++@@ -13,7 +13,6 @@
++     <PackageReference Include="NLog.Layouts.ClefJsonLayout" Version="1.0.5" />
++     <PackageReference Include="NLog.Extensions.Logging" Version="5.5.0" />
++     <PackageReference Include="Npgsql" Version="9.0.5" />
++-    <PackageReference Include="Sentry" Version="4.0.2" />
++     <PackageReference Include="NLog.Targets.Syslog" Version="7.0.0" />
++     <PackageReference Include="SharpZipLib" Version="1.4.2" />
++     <PackageReference Include="SourceGear.sqlite3" Version="3.50.4.5" />
++diff --git a/src/NzbDrone.Core/Configuration/ConfigFileProvider.cs b/src/NzbDrone.Core/Configuration/ConfigFileProvider.cs
++index 75a820657..c488cd934 100644
++--- a/src/NzbDrone.Core/Configuration/ConfigFileProvider.cs
+++++ b/src/NzbDrone.Core/Configuration/ConfigFileProvider.cs
++@@ -44,7 +44,6 @@ public interface IConfigFileProvider : IHandleAsync<ApplicationStartedEvent>,
++         bool LogSql { get; }
++         int LogRotate { get; }
++         int LogSizeLimit { get; }
++-        bool FilterSentryEvents { get; }
++         string Branch { get; }
++         string ApiKey { get; }
++         string SslCertPath { get; }
++@@ -259,7 +258,6 @@ public AuthenticationType AuthenticationMethod
++         public bool LogSql => _logOptions.Sql ?? GetValueBoolean("LogSql", false, persist: false);
++         public int LogRotate => _logOptions.Rotate ?? GetValueInt("LogRotate", 50, persist: false);
++         public int LogSizeLimit => Math.Min(Math.Max(_logOptions.SizeLimit ?? GetValueInt("LogSizeLimit", 1, persist: false), 0), 10);
++-        public bool FilterSentryEvents => _logOptions.FilterSentryEvents ?? GetValueBoolean("FilterSentryEvents", true, persist: false);
++         public string SslCertPath => _serverOptions.SslCertPath ?? GetValue("SslCertPath", "");
++         public string SslCertPassword => _serverOptions.SslCertPassword ?? GetValue("SslCertPassword", "");
++ 
++diff --git a/src/NzbDrone.Core/Download/CompletedDownloadService.cs b/src/NzbDrone.Core/Download/CompletedDownloadService.cs
++index e9b3feb66..7b9e407e0 100644
++--- a/src/NzbDrone.Core/Download/CompletedDownloadService.cs
+++++ b/src/NzbDrone.Core/Download/CompletedDownloadService.cs
++@@ -232,7 +232,7 @@ public bool VerifyImport(TrackedDownload trackedDownload, List<ImportResult> imp
++                            .Property("DownloadId", trackedDownload.DownloadItem.DownloadId)
++                            .Property("Title", trackedDownload.DownloadItem.Title)
++                            .Property("Path", trackedDownload.ImportItem.OutputPath.ToString())
++-                           .WriteSentryWarn("DownloadHistoryIncomplete")
+++                           .Warn("DownloadHistoryIncomplete")
++                            .Log();
++                 }
++ 
++diff --git a/src/NzbDrone.Core/Instrumentation/ReconfigureLogging.cs b/src/NzbDrone.Core/Instrumentation/ReconfigureLogging.cs
++index d49bb06d7..f418b58b0 100644
++--- a/src/NzbDrone.Core/Instrumentation/ReconfigureLogging.cs
+++++ b/src/NzbDrone.Core/Instrumentation/ReconfigureLogging.cs
++@@ -8,7 +8,6 @@
++ using NzbDrone.Common.EnvironmentInfo;
++ using NzbDrone.Common.Extensions;
++ using NzbDrone.Common.Instrumentation;
++-using NzbDrone.Common.Instrumentation.Sentry;
++ using NzbDrone.Core.Configuration;
++ using NzbDrone.Core.Configuration.Events;
++ using NzbDrone.Core.Datastore;
++@@ -64,8 +63,6 @@ public void Reconfigure()
++             // Log Sql
++             SqlBuilderExtensions.LogSql = _configFileProvider.LogSql;
++ 
++-            // Sentry
++-            ReconfigureSentry();
++ 
++             LogManager.ReconfigExistingLoggers();
++         }
++@@ -102,15 +99,6 @@ private void ReconfigureFile()
++             }
++         }
++ 
++-        private void ReconfigureSentry()
++-        {
++-            var sentryTarget = LogManager.Configuration.AllTargets.OfType<SentryTarget>().FirstOrDefault();
++-            if (sentryTarget != null)
++-            {
++-                sentryTarget.SentryEnabled = (RuntimeInfo.IsProduction && _configFileProvider.AnalyticsEnabled) || RuntimeInfo.IsDevelopment;
++-                sentryTarget.FilterEvents = _configFileProvider.FilterSentryEvents;
++-            }
++-        }
++ 
++         private void ReconfigureConsole()
++         {
++diff --git a/src/NzbDrone.Core/Instrumentation/ReconfigureSentry.cs b/src/NzbDrone.Core/Instrumentation/ReconfigureSentry.cs
++deleted file mode 100644
++index 2d8f14b20..000000000
++--- a/src/NzbDrone.Core/Instrumentation/ReconfigureSentry.cs
+++++ /dev/null
++@@ -1,42 +0,0 @@
++-﻿using System.Linq;
++-using NLog;
++-using NzbDrone.Common.EnvironmentInfo;
++-using NzbDrone.Common.Instrumentation.Sentry;
++-using NzbDrone.Core.Configuration;
++-using NzbDrone.Core.Datastore;
++-using NzbDrone.Core.Lifecycle;
++-using NzbDrone.Core.Messaging.Events;
++-
++-namespace NzbDrone.Core.Instrumentation
++-{
++-    public class ReconfigureSentry : IHandleAsync<ApplicationStartedEvent>
++-    {
++-        private readonly IConfigFileProvider _configFileProvider;
++-        private readonly IPlatformInfo _platformInfo;
++-        private readonly IMainDatabase _database;
++-
++-        public ReconfigureSentry(IConfigFileProvider configFileProvider,
++-                                 IPlatformInfo platformInfo,
++-                                 IMainDatabase database)
++-        {
++-            _configFileProvider = configFileProvider;
++-            _platformInfo = platformInfo;
++-            _database = database;
++-        }
++-
++-        public void Reconfigure()
++-        {
++-            // Extended sentry config
++-            var sentryTarget = LogManager.Configuration.AllTargets.OfType<SentryTarget>().FirstOrDefault();
++-            if (sentryTarget != null)
++-            {
++-                sentryTarget.UpdateScope(_database.Version, _database.Migration, _configFileProvider.Branch, _platformInfo);
++-            }
++-        }
++-
++-        public void HandleAsync(ApplicationStartedEvent message)
++-        {
++-            Reconfigure();
++-        }
++-    }
++-}
++diff --git a/src/NzbDrone.Core/MediaFiles/MediaInfo/MediaInfoFormatter.cs b/src/NzbDrone.Core/MediaFiles/MediaInfo/MediaInfoFormatter.cs
++index 6914519fd..941a92cac 100644
++--- a/src/NzbDrone.Core/MediaFiles/MediaInfo/MediaInfoFormatter.cs
+++++ b/src/NzbDrone.Core/MediaFiles/MediaInfo/MediaInfoFormatter.cs
++@@ -154,7 +154,7 @@ public static string FormatAudioCodec(MediaInfoModel mediaInfo, string sceneName
++ 
++             Logger.ForDebugEvent()
++                   .Message("Unknown audio format: '{0}' in '{1}'. Streams: {2}", audioFormat, sceneName, mediaInfo.RawStreamData)
++-                  .WriteSentryWarn("UnknownAudioFormatFFProbe", mediaInfo.ContainerFormat, mediaInfo.AudioFormat, audioCodecID)
+++                  .Warn("UnknownAudioFormatFFProbe")
++                   .Log();
++ 
++             return mediaInfo.AudioFormat;
++@@ -269,7 +269,7 @@ public static string FormatVideoCodec(MediaInfoModel mediaInfo, string sceneName
++ 
++             Logger.ForDebugEvent()
++                   .Message("Unknown video format: '{0}' in '{1}'. Streams: {2}", videoFormat, sceneName, mediaInfo.RawStreamData)
++-                  .WriteSentryWarn("UnknownVideoFormatFFProbe", mediaInfo.ContainerFormat, videoFormat, videoCodecID)
+++                  .Warn("UnknownVideoFormatFFProbe")
++                   .Log();
++ 
++             return result;
++diff --git a/src/NzbDrone.Test.Common/LoggingTest.cs b/src/NzbDrone.Test.Common/LoggingTest.cs
++index f56a1f00f..d4e654cdd 100644
++--- a/src/NzbDrone.Test.Common/LoggingTest.cs
+++++ b/src/NzbDrone.Test.Common/LoggingTest.cs
++@@ -25,7 +25,6 @@ protected static void InitLogging()
++ 
++                 Enum.TryParse<TestLogOutput>(Environment.GetEnvironmentVariable("RADARR_TESTS_LOG_OUTPUT"), out var logOutput);
++ 
++-                RegisterSentryLogger();
++ 
++                 switch (logOutput)
++                 {
++@@ -69,12 +68,6 @@ private static void RegisterFileLogger()
++             LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, fileTarget));
++         }
++ 
++-        private static void RegisterSentryLogger()
++-        {
++-            // Register a null target for sentry logs, so they aren't caught by other loggers.
++-            var loggingRuleSentry = new LoggingRule("Sentry", LogLevel.Debug, new NullTarget()) { Final = true };
++-            LogManager.Configuration.LoggingRules.Insert(0, loggingRuleSentry);
++-        }
++ 
++         private static void RegisterExceptionVerification()
++         {
++-- 
++2.54.0
++
 diff --git a/src/Directory.Build.props b/src/Directory.Build.props
 index be4822d45..d42fc7986 100644
 --- a/src/Directory.Build.props
@@ -508,7 +1785,7 @@ index 038be8da8..000000000
 -    }
 -}
 diff --git a/src/NzbDrone.Common/Instrumentation/NzbDroneLogger.cs b/src/NzbDrone.Common/Instrumentation/NzbDroneLogger.cs
-index 663f76ce3..64b3c7b32 100644
+index 663f76ce3..4e2e37da2 100644
 --- a/src/NzbDrone.Common/Instrumentation/NzbDroneLogger.cs
 +++ b/src/NzbDrone.Common/Instrumentation/NzbDroneLogger.cs
 @@ -6,7 +6,6 @@
@@ -519,16 +1796,16 @@ index 663f76ce3..64b3c7b32 100644
  
  namespace NzbDrone.Common.Instrumentation
  {
-@@ -45,7 +44,7 @@ public static void Register(IStartupContext startupContext, bool updateApp, bool
+@@ -45,8 +44,6 @@ public static void Register(IStartupContext startupContext, bool updateApp, bool
                  RegisterDebugger();
              }
  
 -            RegisterSentry(updateApp, appFolderInfo);
-+
- 
+-
              if (updateApp)
              {
-@@ -66,35 +65,6 @@ public static void Register(IStartupContext startupContext, bool updateApp, bool
+                 RegisterUpdateFile(appFolderInfo);
+@@ -66,36 +63,6 @@ public static void Register(IStartupContext startupContext, bool updateApp, bool
              LogManager.ReconfigExistingLoggers();
          }
  
@@ -561,9 +1838,10 @@ index 663f76ce3..64b3c7b32 100644
 -            var loggingRuleSentry = new LoggingRule("Sentry", LogLevel.Debug, target) { Final = true };
 -            LogManager.Configuration.LoggingRules.Insert(0, loggingRuleSentry);
 -        }
- 
+-
          private static void RegisterDebugger()
          {
+             var target = new DebuggerTarget();
 diff --git a/src/NzbDrone.Common/Instrumentation/Sentry/SentryCleanser.cs b/src/NzbDrone.Common/Instrumentation/Sentry/SentryCleanser.cs
 deleted file mode 100644
 index 85175b426..000000000
@@ -1186,7 +2464,7 @@ index e9b3feb66..7b9e407e0 100644
                  }
  
 diff --git a/src/NzbDrone.Core/Instrumentation/ReconfigureLogging.cs b/src/NzbDrone.Core/Instrumentation/ReconfigureLogging.cs
-index d49bb06d7..f418b58b0 100644
+index d49bb06d7..b42965bb3 100644
 --- a/src/NzbDrone.Core/Instrumentation/ReconfigureLogging.cs
 +++ b/src/NzbDrone.Core/Instrumentation/ReconfigureLogging.cs
 @@ -8,7 +8,6 @@
@@ -1197,16 +2475,17 @@ index d49bb06d7..f418b58b0 100644
  using NzbDrone.Core.Configuration;
  using NzbDrone.Core.Configuration.Events;
  using NzbDrone.Core.Datastore;
-@@ -64,8 +63,6 @@ public void Reconfigure()
+@@ -64,9 +63,6 @@ public void Reconfigure()
              // Log Sql
              SqlBuilderExtensions.LogSql = _configFileProvider.LogSql;
  
 -            // Sentry
 -            ReconfigureSentry();
- 
+-
              LogManager.ReconfigExistingLoggers();
          }
-@@ -102,15 +99,6 @@ private void ReconfigureFile()
+ 
+@@ -102,16 +98,6 @@ private void ReconfigureFile()
              }
          }
  
@@ -1219,9 +2498,10 @@ index d49bb06d7..f418b58b0 100644
 -                sentryTarget.FilterEvents = _configFileProvider.FilterSentryEvents;
 -            }
 -        }
- 
+-
          private void ReconfigureConsole()
          {
+             var consoleTarget = LogManager.Configuration.AllTargets.OfType<ColoredConsoleTarget>().FirstOrDefault();
 diff --git a/src/NzbDrone.Core/Instrumentation/ReconfigureSentry.cs b/src/NzbDrone.Core/Instrumentation/ReconfigureSentry.cs
 deleted file mode 100644
 index 2d8f14b20..000000000
@@ -1293,18 +2573,19 @@ index 6914519fd..941a92cac 100644
  
              return result;
 diff --git a/src/NzbDrone.Test.Common/LoggingTest.cs b/src/NzbDrone.Test.Common/LoggingTest.cs
-index f56a1f00f..d4e654cdd 100644
+index f56a1f00f..77965d6b2 100644
 --- a/src/NzbDrone.Test.Common/LoggingTest.cs
 +++ b/src/NzbDrone.Test.Common/LoggingTest.cs
-@@ -25,7 +25,6 @@ protected static void InitLogging()
+@@ -25,8 +25,6 @@ protected static void InitLogging()
  
                  Enum.TryParse<TestLogOutput>(Environment.GetEnvironmentVariable("RADARR_TESTS_LOG_OUTPUT"), out var logOutput);
  
 -                RegisterSentryLogger();
- 
+-
                  switch (logOutput)
                  {
-@@ -69,12 +68,6 @@ private static void RegisterFileLogger()
+                     case TestLogOutput.Console:
+@@ -69,13 +67,6 @@ private static void RegisterFileLogger()
              LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, fileTarget));
          }
  
@@ -1314,9 +2595,7 @@ index f56a1f00f..d4e654cdd 100644
 -            var loggingRuleSentry = new LoggingRule("Sentry", LogLevel.Debug, new NullTarget()) { Final = true };
 -            LogManager.Configuration.LoggingRules.Insert(0, loggingRuleSentry);
 -        }
- 
+-
          private static void RegisterExceptionVerification()
          {
--- 
-2.54.0
-
+             var exceptionVerification = new ExceptionVerification();
