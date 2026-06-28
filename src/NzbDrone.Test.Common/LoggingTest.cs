@@ -25,7 +25,6 @@ namespace NzbDrone.Test.Common
 
                 Enum.TryParse<TestLogOutput>(Environment.GetEnvironmentVariable("RADARR_TESTS_LOG_OUTPUT"), out var logOutput);
 
-
                 switch (logOutput)
                 {
                     case TestLogOutput.Console:
@@ -67,7 +66,6 @@ namespace NzbDrone.Test.Common
             LogManager.Configuration.AddTarget(fileTarget.GetType().Name, fileTarget);
             LogManager.Configuration.LoggingRules.Add(new LoggingRule("*", LogLevel.Trace, fileTarget));
         }
-
 
         private static void RegisterExceptionVerification()
         {

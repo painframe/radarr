@@ -44,8 +44,6 @@ namespace NzbDrone.Common.Instrumentation
                 RegisterDebugger();
             }
 
-
-
             if (updateApp)
             {
                 RegisterUpdateFile(appFolderInfo);
@@ -64,7 +62,6 @@ namespace NzbDrone.Common.Instrumentation
 
             LogManager.ReconfigExistingLoggers();
         }
-
 
         private static void RegisterDebugger()
         {

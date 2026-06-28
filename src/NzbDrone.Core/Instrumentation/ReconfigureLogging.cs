@@ -63,7 +63,6 @@ namespace NzbDrone.Core.Instrumentation
             // Log Sql
             SqlBuilderExtensions.LogSql = _configFileProvider.LogSql;
 
-
             LogManager.ReconfigExistingLoggers();
         }
 
@@ -98,7 +97,6 @@ namespace NzbDrone.Core.Instrumentation
                 target.ArchiveAboveSize = _configFileProvider.LogSizeLimit.Megabytes();
             }
         }
-
 
         private void ReconfigureConsole()
         {
